@@ -1,0 +1,116 @@
+<html>
+    <head>
+        <title>GitHub Repository Analysis</title>
+        <!-- Optional - add some styles -->
+    </head>
+
+    <body>
+
+        <div>
+            <h1>GitHub Repository Programming Language Analysis</h1>
+
+            <label for="github-username">Enter GitHub Username</label>
+            <input id="github-username">
+            <button id="analyze">Analyze</button>
+
+            <div id="status-message"></div>
+
+            <div id="repository-statistics">
+                <!-- todo - your script will display the number of repositories with each programming language  -->
+            </div>
+
+            <div id="repository-list">
+                <!-- todo - your script will display a list of repositories here -->
+            </div>
+                
+        </div>
+            
+        <!-- TODO Use JavaScript to display list of languages and frequencies -->
+
+        <script>
+       
+            let analyzeButton = document.querySelector('#analyze')
+            let usernameInput = document.querySelector('#github-username')
+
+            let statusMessage = document.querySelector('#status-message')
+
+            let repoList = document.querySelector('#repository-list')
+            let repoStats = document.querySelector('#repository-statistics')
+
+
+            analyzeButton.addEventListener('click', function() {
+                let username = usernameInput.value
+                let url = `https://api.github.com/users/${username}/repos`
+                
+                statusMessage.innerHTML = 'Please wait...'
+                
+                fetch(url)   // make request to URL
+                    .then(response => response.json())  // extract the JSON from the response 
+                    .then(githubJson => {   
+                        displayRepositoriesOnPage(githubJson)
+                        })
+                    .catch(error => {    // handle errors that occur when requesting data or processing the response
+                        console.log(error)
+                        alert('Error fetching data from GitHub. Verify you are connected to the internet and the username is correct, and that there are no errors in your code.\
+                              \nSee error message in developer tools for more information.')
+                    })
+                    .finally( () => {
+                        statusMessage.innerHTML = ''  // clear status message. Code in the finally handler always runs, regardless if the request works or failed. 
+                    })
+            })
+
+            function displayRepositoriesOnPage(githubJsonArray) {
+                // clearing the list of repositories
+                repoList.innerHTML = ''
+                repoStats.innerHTML = ''
+                let languageCount = {}
+                let repoListH1 = document.createElement('h1');
+                repoListH1.innerHTML = "List of Repositories and their links"
+                repoList.appendChild(repoListH1);
+                githubJsonArray.forEach(function(repo) {
+                    let repoTag = document.createElement('p');
+                    let linkTag = document.createElement('a');
+                    // collecting the language data
+                    let language = repo.language;
+                    if (language && !languageCount[language]){                
+                        languageCount[language] = 1;                                          
+                    } else if (!language) {
+                        // if the language is null, we want to display this as No Language Stated
+                        if (!languageCount['No Language Stated']){
+                            languageCount['No Language Stated'] = 1;
+                        } else {
+                            languageCount['No Language Stated'] = languageCount['No Language Stated'] + 1;
+                        }
+                    } else {
+                        languageCount[language] = languageCount[language] + 1;
+                    }                
+                    linkTag.href = repo.html_url;
+                    linkTag.innerHTML = repo.html_url;
+
+                    repoTag.innerHTML = repo.name + ": ";
+                    repoTag.appendChild(linkTag);
+
+                    repoList.appendChild(repoTag);
+                })
+                if (githubJsonArray.length == 0){
+                    // there were no repositories recorded for the repo
+                    let errorTag = document.createElement('p');
+                    errorTag.innerHTML = "The user doesnt have any public repositories!!";
+                    repoList.appendChild(errorTag);
+                    return;
+                }
+                let repoStatsH1 = document.createElement('h1');
+                repoStatsH1.innerHTML = 'Languages used and their frequency:'
+                repoStats.appendChild(repoStatsH1)
+                console.log(languageCount)
+                for (let key in languageCount){
+                    let newP = document.createElement('p');
+                    newP.innerHTML = `${key}: ${languageCount[key]}`;
+                    repoStats.appendChild(newP);
+                }
+            }
+
+
+        </script>
+    </body>
+</html>
